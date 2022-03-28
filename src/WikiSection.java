@@ -3,21 +3,21 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class WikiData {
+public class WikiSection {
     protected StringBuffer data;
     protected String preamble;
     protected String name;
-    protected List<WikiData> subsections;
+    protected List<WikiSection> subsections;
 
-    public WikiData(String name, String data){
+    public WikiSection(String name, String data){
         this.name = new String(name);
         this.data = new StringBuffer(data);
-        subsections = new ArrayList<WikiData>();
-        parse();
-        System.out.println(this.data);
+        subsections = new ArrayList<WikiSection>();
+        filter();
+        //System.out.println(this.data);
     }
 
-    private void parse(){
+    private void filter(){
         // Find the links \|\<ref.+?</ref>
         // Find the data after the header \{\|class=".+?".+?\|\}
 
@@ -28,7 +28,8 @@ public class WikiData {
         Matcher matcher = pattern.matcher(parsed);
 
         if (!matcher.find()){
-            System.out.println("NO MATCH");
+            data = new StringBuffer(parsed);
+            return;
         }
         else {
             parsed = matcher.group();
@@ -36,9 +37,15 @@ public class WikiData {
 
         parsed = removeLinks(parsed);
 
-        data = new StringBuffer(parsed);
+        data = new StringBuffer();
+        data.append(parsed);
     }
 
+    /**
+     * Removes hyperlinks from input string
+     * @param in String to remove hyperlinks from
+     * @return String with removed hyperlinks
+     */
     private String removeLinks(String in){
         List<String> stringPatterns = new ArrayList<>();
         stringPatterns.add("\\|\\<ref.+?</ref>");
@@ -52,17 +59,25 @@ public class WikiData {
         return in;
     }
 
+    private void filterSubsections(){
+
+    }
+
     @Override
     public String toString() {
         StringBuffer buffer = new StringBuffer();
-        buffer.append("Name : \t" + name + "\n");
+        buffer.append("Section : \t" + name + "\n");
 
         buffer.append(data);
 
-        for (WikiData wikiData: subsections) {
-            buffer.append("Section : \t" + wikiData.name + "\n");
+        for (WikiSection wikiSection : subsections) {
+            buffer.append("SubSection : \t" + wikiSection.name + "\n");
         }
 
         return buffer.toString();
+    }
+
+    public WikiSection getSection(String sectionTitle){
+        return null;
     }
 }
