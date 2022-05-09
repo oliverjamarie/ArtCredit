@@ -1,20 +1,24 @@
+package Parser;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class WikiSection {
-    protected StringBuffer data;
+    protected StringBuffer dataStrBuff;
     protected String preamble;
     protected String name;
     protected List<WikiSection> subsections;
+    protected List<IWikiData> wikiDataList;
 
     public WikiSection(String name, String data){
         this.name = new String(name);
-        this.data = new StringBuffer(data);
+        this.dataStrBuff = new StringBuffer(data);
         subsections = new ArrayList<WikiSection>();
+        wikiDataList = new ArrayList<>();
+        filterSubsections();
         filter();
-        //System.out.println(this.data);
     }
 
     private void filter(){
@@ -22,23 +26,22 @@ public class WikiSection {
         // Find the data after the header \{\|class=".+?".+?\|\}
 
         String stringPattern = "\\{\\|\\s?class=\".+?\".+?\\|\\}";
-        String parsed = data.substring(name.length());
+        String parsed = dataStrBuff.substring(name.length());
+        parsed = removeLinks(parsed);
 
         Pattern pattern = Pattern.compile(stringPattern);
         Matcher matcher = pattern.matcher(parsed);
 
         if (!matcher.find()){
-            data = new StringBuffer(parsed);
+            dataStrBuff = new StringBuffer(parsed);
             return;
         }
         else {
             parsed = matcher.group();
         }
 
-        parsed = removeLinks(parsed);
-
-        data = new StringBuffer();
-        data.append(parsed);
+        dataStrBuff = new StringBuffer(parsed);
+        wikiDataList.add(new WikiDataTable(dataStrBuff.toString(), name));
     }
 
     /**
@@ -59,16 +62,25 @@ public class WikiSection {
         return in;
     }
 
-    private void filterSubsections(){
+    private String extractTable(String in){
+        return null;
+    }
 
+    private void filterSubsections(){
+        //System.out.println("Filtering Subsections");
+
+        String stringPattern = "={3}[A-Z][a-zA-Z|\\s]*={3}";
+
+        Pattern pattern = Pattern.compile(stringPattern);
+        Matcher matcher = pattern.matcher(stringPattern);
     }
 
     @Override
     public String toString() {
-        StringBuffer buffer = new StringBuffer();
+        StringBuffer buffer = new StringBuffer(dataStrBuff);
         buffer.append("Section : \t" + name + "\n");
 
-        buffer.append(data);
+        buffer.append(dataStrBuff);
 
         for (WikiSection wikiSection : subsections) {
             buffer.append("SubSection : \t" + wikiSection.name + "\n");
