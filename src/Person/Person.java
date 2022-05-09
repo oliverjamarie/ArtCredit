@@ -1,3 +1,8 @@
+package Person;
+
+import ArtWork.IArtWork;
+import Parser.WikiParser;
+
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -9,13 +14,6 @@ import java.util.List;
 
 public class Person {
 
-    public static enum Occupation{
-        UNDEFINED,
-        Actor,
-        FilmMaker,
-        Producer
-    }
-
     String firstName, lastName;
     String mainWikiPage;
     String listOfWorksWikiPage;
@@ -23,13 +21,17 @@ public class Person {
     int id;
     protected static int countPeople = 0;
     private WebDriver driver;
-    protected List<Occupation> occupationList;
+    protected List<Occupation> knownForBeing;
+    protected List<IArtWork> artWorks;
 
     public Person(String firstName, String lastName) {
         this.firstName = firstName;
         this.lastName = lastName;
-        id = countPeople ++;
-        occupationList = new ArrayList<Occupation>();
+        id = ++ countPeople;
+
+        knownForBeing = new ArrayList<Occupation>();
+        artWorks = new ArrayList<>();
+
         ChromeOptions options = new ChromeOptions();
         options.addArguments("headless");
 
@@ -40,7 +42,7 @@ public class Person {
         findListOfWorksWikiPage();
         parseListOfWorks();
 
-        driver.close();
+        //driver.close();
     }
 
     private void findMainWikiPage(){
@@ -59,7 +61,7 @@ public class Person {
         WebElement occupationWebElement = null;
 
         for(WebElement child : children){
-            if (child.getText().contains("Occupation")){
+            if (child.getText().contains("Person.Occupation")){
                 occupationWebElement = child;
                 break;
             }
@@ -81,8 +83,8 @@ public class Person {
      * @param occupationIn String containing the list of the person's occupations
      */
     private void parseOccupations(String occupationIn){
-        Occupation  occupation;
-        
+        Occupation occupation;
+
         if (occupationIn == null){
             return;
         }
@@ -92,7 +94,7 @@ public class Person {
         occupation = parseOccupation(occupationIn);
 
         while (occupation != Occupation.UNDEFINED){
-            occupationList.add(occupation);
+            knownForBeing.add(occupation);
             occupationIn = filterOccupations(occupation, occupationIn);
             occupation = parseOccupation(occupationIn);
         }
@@ -117,7 +119,8 @@ public class Person {
         if (occupation.contains("PRODUCER")){
             return Occupation.Producer;
         }
-        System.out.println(occupation);
+        System.out.println("Unkown Person.Occupation " + occupation);
+
         return Occupation.UNDEFINED;
     }
 
@@ -182,13 +185,31 @@ public class Person {
 
     private void parseListOfWorks(){
         String title = driver.getTitle().replace(" - Wikipedia", "");
-        System.out.println(title);
+        System.out.println("TITLE\t" + title);
+        System.out.println(driver.getCurrentUrl());
 
         driver.get("https://en.wikipedia.org/wiki/Special:Export/" + title);
 
-        String contents = driver.findElement(By.cssSelector("#folder4 > div.opened > div:nth-child(16) > span:nth-child(2)")).getText();
-        //System.out.println(contents);
+        List<WebElement> webElements = driver.findElements(By.className("line"));
+        WebElement text = null;
+
+        for (WebElement element :
+                webElements) {
+            WebElement searchedElement = element.findElement(By.className("html-tag"));
+            if (searchedElement.getText().contains("<text")){
+                text = element;
+            }
+        }
+
+        if (text == null){
+            return;
+        }
+
+        String contents = text.findElements(By.tagName("span")).get(7).getText();
+
+        //System.out.println("WAKA WAKA\t" + contents);
         WikiParser parser = new WikiParser(contents);
+        //parser.findArtWorks(knownForBeing);
     }
 
     public String getFirstName() {
@@ -205,12 +226,13 @@ public class Person {
 
         buffer.append(firstName + " " + lastName + "\n");
 
-        buffer.append("Occupation(s)\n\t");
+        buffer.append("Person.Occupation(s)\n\t");
         for (Occupation occupation :
-                occupationList) {
+                knownForBeing) {
             buffer.append(occupation);
             buffer.append("\n\t");
         }
         return buffer.toString();
     }
+
 }
