@@ -1,3 +1,8 @@
+package Parser;
+
+import ArtWork.IArtWork;
+import Person.Occupation;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -5,20 +10,20 @@ import java.util.regex.Pattern;
 
 public class WikiParser {
     String fileContents;
-    List<WikiData> wikiDataList;
+    List<WikiSection> wikiDataList;
 
     public WikiParser(String data) {
         fileContents = new String(data);
-        wikiDataList = new ArrayList<WikiData>();
+        wikiDataList = new ArrayList<WikiSection>();
         parse();
     }
 
     private void parse(){
-        //System.out.println(fileContents);
+        //System.out.println("Parsing");
 
         //Regex to find different sections in wiki page : ={2,}[A-Z][a-zA-Z|\s]*={2,}
         //Regex Pattern to extract tables : \{\|class="[\w\s]*"\s([!="%':;,#~?&\—‘’\–\.\<\>\/\[\]\(\)\{\}\|\-\s\d\w])+?\|\}
-        String stringPattern = "={2}[A-Z][a-zA-Z|\\s]*={2}";
+        String stringPattern = "={2}\\s?[A-Z][a-zA-Z|\\s]*\\s?={2}";
 
         Pattern pattern = Pattern.compile(stringPattern);
         Matcher matcher = pattern.matcher(fileContents);
@@ -49,11 +54,16 @@ public class WikiParser {
                 data = fileContents.substring(startIndex);
             }
 
-            wikiDataList.add(new WikiData(name,data));
+            //FIXME Doesn't extract plays for Hugh Jackman
+            wikiDataList.add(new WikiSection(name,data));
         }
-
-
     }
 
+    public List<IArtWork> findArtWorks(List<Occupation> occupationList){
+        ArrayList<IArtWork> IArtWorks = new ArrayList<>();
 
+        System.out.println("Sections");
+
+        return IArtWorks;
+    }
 }
